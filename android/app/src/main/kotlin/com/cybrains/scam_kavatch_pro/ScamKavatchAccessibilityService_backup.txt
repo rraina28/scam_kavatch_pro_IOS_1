@@ -1,0 +1,172 @@
+package com.cybrains.scam_kavatch_pro
+
+import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.net.Uri
+import android.os.Handler
+import android.os.Looper
+import android.util.Log
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityNodeInfo
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.embedding.engine.FlutterEngineCache
+import io.flutter.embedding.engine.dart.DartExecutor
+import io.flutter.plugin.common.MethodChannel
+
+class ScamKavatchAccessibilityService : AccessibilityService() {
+
+    private val TAG = "ScamKavatchService"
+    private val handler = Handler(Looper.getMainLooper())
+
+    private var lastDetectedUrl = ""
+    private var lastAlertTime = 0L
+    private val alertCooldownMs = 2500L
+
+    private val supportedPackages = setOf(
+        "com.android.chrome",
+        "com.sec.android.app.sbrowser",
+        "com.microsoft.emmx",
+        "com.whatsapp",
+        "com.facebook.orca"
+    )
+
+    private val channelName = "scam_kavatch/accessibility"
+    private var methodChannel: MethodChannel? = null
+
+    private val suspiciousTlds = setOf(
+        "xyz", "abc", "site", "top", "web", "tech", "click", "online", "buzz",
+        "icu", "loan", "vip", "support", "help", "tk", "ml", "ga", "cf"
+    )
+
+    private val suspiciousHosts = setOf(
+        "sites.google.com", "blogspot.com", "weebly.com", "wixsite.com",
+        "000webhostapp.com", "pages.dev", "vercel.app", "web.app",
+        "firebaseapp.com", "github.io"
+    )
+
+    private val suspiciousDomains = setOf(
+        "refund-claim", "refund-claim-now", "upi-refund", "kyc-update",
+        "account-verify", "secure-login", "payment-alert", "reward-claim", "cashback-offer"
+    )
+
+    private val suspiciousKeywords = setOf(
+        "refund", "claim", "upi", "kyc", "verify", "secure", "login",
+        "reward", "cashback", "offer", "alert", "bank", "account", "freegift", "bonus"
+    )
+
+    enum class RiskLevel { LOW, MEDIUM, HIGH }
+
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        val info = serviceInfo ?: AccessibilityServiceInfo()
+        info.flags = info.flags or
+                AccessibilityServiceInfo.FLAG_REPORT_VIEW_IDS or
+                AccessibilityServiceInfo.FLAG_RETRIEVE_INTERACTIVE_WINDOWS
+        serviceInfo = info
+        initFlutterChannel()
+        Log.d(TAG, "Accessibility Service Connected")
+    }
+
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        if (event == null) return
+        val pkg = event.packageName?.toString() ?: return
+        if (!supportedPackages.contains(pkg)) return
+
+        when (event.eventType) {
+            AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED,
+            AccessibilityEvent.TYPE_VIEW_TEXT_CHANGED,
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
+                handler.removeCallbacks(scanRunnable)
+                handler.postDelayed(scanRunnable, 350)
+            }
+        }
+    }
+
+    private val scanRunnable = Runnable {
+        try {
+            val rootNode = rootInActiveWindow ?: return@Runnable
+            val foundUrls = mutableSetOf<String>()
+            
+            findUrlsInTree(rootNode, foundUrls)
+
+            for (rawUrl in foundUrls) {
+                val risk = evaluateRisk(rawUrl)
+                if (risk != RiskLevel.LOW && !shouldIgnore(rawUrl)) {
+                    processDetectedThreat(rawUrl, risk)
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Scan Error", e)
+        }
+    }
+
+    private fun findUrlsInTree(node: AccessibilityNodeInfo?, results: MutableSet<String>) {
+        if (node == null) return
+        val text = node.text?.toString()
+        if (!text.isNullOrBlank()) {
+            results.addAll(extractUrls(text))
+        }
+        for (i in 0 until node.childCount) {
+            findUrlsInTree(node.getChild(i), results)
+        }
+    }
+
+    private fun extractUrls(text: String): List<String> {
+        val regex = Regex("\\b([a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}\\b", RegexOption.IGNORE_CASE)
+        return regex.findAll(text).map { it.value.lowercase() }.toList()
+    }
+
+    private fun evaluateRisk(url: String): RiskLevel {
+        if (suspiciousHosts.any { url.endsWith(it) }) return RiskLevel.HIGH
+        if (suspiciousDomains.any { url.contains(it) }) return RiskLevel.HIGH
+        
+        val tld = url.substringAfterLast(".", "")
+        if (suspiciousTlds.contains(tld)) return RiskLevel.MEDIUM
+        
+        val keywordCount = suspiciousKeywords.count { url.contains(it) }
+        if (keywordCount >= 2) return RiskLevel.MEDIUM
+        
+        return RiskLevel.LOW
+    }
+
+    private fun processDetectedThreat(url: String, risk: RiskLevel) {
+        lastDetectedUrl = url
+        lastAlertTime = System.currentTimeMillis()
+
+        // 1. Send to Flutter
+        sendUrlToFlutter(url, risk)
+
+        // 2. Show Native Notification
+        val title = if (risk == RiskLevel.HIGH) "🚨 High Risk Alert" else "⚠️ Warning"
+        val msg = "Suspicious link detected: $url"
+        NotificationHelper.showNotification(this, title, msg)
+    }
+
+    private fun shouldIgnore(url: String): Boolean {
+        val now = System.currentTimeMillis()
+        if (url == lastDetectedUrl && (now - lastAlertTime) < alertCooldownMs) return true
+        return url.startsWith("chrome://") || url.length > 250
+    }
+
+    private fun initFlutterChannel() {
+        try {
+            val engineId = "scam_kavatch_engine"
+            var engine = FlutterEngineCache.getInstance().get(engineId)
+            if (engine == null) {
+                engine = FlutterEngine(this)
+                engine.dartExecutor.executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault())
+                FlutterEngineCache.getInstance().put(engineId, engine)
+            }
+            methodChannel = MethodChannel(engine.dartExecutor.binaryMessenger, channelName)
+        } catch (e: Exception) {
+            Log.e(TAG, "Flutter Init Failed", e)
+        }
+    }
+
+    private fun sendUrlToFlutter(url: String, risk: RiskLevel) {
+        val args = hashMapOf("url" to url, "risk" to risk.name)
+        handler.post { methodChannel?.invokeMethod("onUrlDetected", args) }
+    }
+
+    override fun onInterrupt() {}
+}

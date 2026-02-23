@@ -1,0 +1,31 @@
+name: scam_kavatch_pro
+description: "A new Flutter project."
+publish_to: 'none'
+
+# Increased version code for your new release
+version: 1.0.19+27
+
+environment:
+  sdk: ^3.10.7
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  shared_preferences: ^2.2.3
+  in_app_purchase: ^3.2.0 
+  
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icon.png"
+
+flutter:
+  uses-material-design: true
+  # Add your assets section here if you have images/fonts

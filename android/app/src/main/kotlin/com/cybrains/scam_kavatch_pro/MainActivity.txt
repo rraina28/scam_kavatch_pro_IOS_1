@@ -1,0 +1,36 @@
+package com.cybrains.scam_kavatch_pro
+
+import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.MethodChannel
+
+class MainActivity : FlutterActivity() {
+
+    private val CHANNEL = "com.scamkavatch/overlay"
+
+    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+        super.configureFlutterEngine(flutterEngine)
+
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+
+                    "testNotification" -> {
+                        try {
+                            NotificationHelper.showTestNotification(this)
+                            result.success(true)
+                        } catch (e: Exception) {
+                            result.error("NOTIFICATION_ERROR", e.toString(), null)
+                        }
+                    }
+
+                    // ✅ No OverlayService in project now, just return success
+                    "dismissOverlay" -> {
+                        result.success(true)
+                    }
+
+                    else -> result.notImplemented()
+                }
+            }
+    }
+}

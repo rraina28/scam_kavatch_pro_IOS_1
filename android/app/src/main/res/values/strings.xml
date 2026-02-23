@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">Scam Kavatch Pro</string>
+
+    <string name="accessibility_service_description">
+        Real-time protection that scans supported apps like Chrome and WhatsApp to detect phishing and scam links and alert the user.
+    </string>
+
+</resources>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Splash theme -->
+    <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
+
+        <!-- Splash background -->
+        <item name="android:windowBackground">@drawable/launch_background</item>
+
+        <!-- Required for Android 15 edge-to-edge -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <!-- Prevent deprecated divider usage -->
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+
+        <!-- Enable drawing behind system bars -->
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+    </style>
+
+
+    <!-- Main theme -->
+    <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
+
+        <item name="android:windowBackground">?android:colorBackground</item>
+
+        <!-- REQUIRED for Android 15 compliance -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+
+        <item name="android:navigationBarDividerColor">@android:color/transparent</item>
+
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+
+    </style>
+
+</resources>
