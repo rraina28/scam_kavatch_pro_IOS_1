@@ -1,23 +1,21 @@
 workflows:
-  ios-cert-generator:
-    name: Generate iOS Certificate
+  ios-release:
+    name: iOS Signed Build
     max_build_duration: 60
 
     environment:
       flutter: stable
       xcode: latest
 
-    scripts:
-      - name: Generate signing certificate
-        script: |
-          mkdir -p $HOME/certs
-          security create-keychain -p "" build.keychain
-          security default-keychain -s build.keychain
-          security unlock-keychain -p "" build.keychain
-          security set-keychain-settings build.keychain
+      groups:
+        - APP_STORE_CONNECT
 
-          security find-identity -v
+    scripts:
+      - name: Install dependencies
+        script: flutter pub get
+
+      - name: Build signed IPA
+        script: flutter build ipa --release
 
     artifacts:
-      - $HOME/certs/*.p12
-      - $HOME/certs/*.mobileprovision
+      - build/ios/ipa/*.ipa
