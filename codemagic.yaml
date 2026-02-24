@@ -1,29 +1,17 @@
 workflows:
-  ios-release:
-    name: ScamKavatch Pro iOS Signed Release Build
+  ios-cert-generator:
+    name: Generate iOS Certificate
     max_build_duration: 60
 
     environment:
       flutter: stable
       xcode: latest
 
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: com.cybrains.scamkavatchpro
-
     scripts:
-      - name: Get Flutter packages
+      - name: Generate certificate
         script: |
-          flutter pub get
-
-      - name: Build signed iOS IPA
-        script: |
-          flutter build ipa --release
+          echo "Certificate generation step"
 
     artifacts:
-      - build/ios/ipa/*.ipa
-
-    publishing:
-      email:
-        recipients:
-          - rraina28@gmail.com
+      - $HOME/Library/MobileDevice/Certificates/*.p12
+      - $HOME/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision
