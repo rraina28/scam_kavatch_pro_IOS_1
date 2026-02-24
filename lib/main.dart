@@ -1,41 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
-
-import 'services/premium_manager.dart';
-import 'services/ad_service.dart';
-import 'widgets/premium_toggle.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 final GlobalKey<NavigatorState> navKey = GlobalKey<NavigatorState>();
 const MethodChannel testChannel = MethodChannel("test");
 
-// REQUIRED for banner refresh
-final ValueNotifier<bool> adRefreshNotifier = ValueNotifier<bool>(false);
-Future<void> main() async {
+void main() {
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  await MobileAds.instance.initialize();
+  // Initialize AdMob (required for Android + iOS)
+  MobileAds.instance.initialize();
 
-  runApp(
-    ChangeNotifierProvider(
-      create: (_) => PremiumManager(),
-      child: const ScamKavatchApp(),
-    ),
-  );
-
-  AdService.loadBanner(() {
-
-    debugPrint("Banner callback triggered");
-
-    // Trigger UI rebuild safely
-    adRefreshNotifier.value = !adRefreshNotifier.value;
-
-  });
+  runApp(const ScamKavatchApp());
 
 }
 class ScamKavatchApp extends StatelessWidget {
@@ -44,11 +22,8 @@ class ScamKavatchApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-
-      navigatorKey: navKey,
-
+  navigatorKey: navKey,
       title: 'Scam Kavatch Pro',
-
       theme: ThemeData(
         primarySwatch: Colors.red,
         useMaterial3: true,
@@ -57,64 +32,19 @@ class ScamKavatchApp extends StatelessWidget {
           brightness: Brightness.light,
         ),
       ),
-
       darkTheme: ThemeData.dark(useMaterial3: true).copyWith(
         colorScheme: ColorScheme.fromSeed(
           seedColor: Colors.red,
           brightness: Brightness.dark,
         ),
       ),
-
-            // Banner attached safely to bottom of entire app
-builder: (context, child) {
-
-  return ValueListenableBuilder(
-    valueListenable: adRefreshNotifier,
-    builder: (context, value, _) {
-
-      final double bannerHeight =
-          (AdService.bannerReady && AdService.bannerAd != null)
-              ? AdService.bannerAd!.size.height.toDouble()
-              : 0.0;
-
-      return Stack(
-        children: [
-
-          Padding(
-            padding: EdgeInsets.only(
-              bottom: bannerHeight + MediaQuery.of(context).padding.bottom,
-            ),
-            child: child ?? const SizedBox.shrink(),
-          ),
-
-          if (AdService.bannerReady && AdService.bannerAd != null)
-            Positioned(
-              bottom: MediaQuery.of(context).padding.bottom,
-              left: 0,
-              right: 0,
-              child: SizedBox(
-                height: bannerHeight,
-                child: AdWidget(ad: AdService.bannerAd!),
-              ),
-            ),
-
-        ],
-      );
-
-    },
-  );
-
-},
       home: const AppGate(),
-
       debugShowCheckedModeBanner: false,
     );
   }
 }
 
-
-
-/// ================== APP GATE ==================
+/// ================== APP GATE (Agreement -> Dashboard) ==================
 class AppGate extends StatefulWidget {
   const AppGate({super.key});
 
@@ -122,12 +52,9 @@ class AppGate extends StatefulWidget {
   State<AppGate> createState() => _AppGateState();
 }
 
-
 class _AppGateState extends State<AppGate> {
-
   bool _loading = true;
   bool _accepted = false;
-
 
   @override
   void initState() {
@@ -135,24 +62,18 @@ class _AppGateState extends State<AppGate> {
     _checkAgreement();
   }
 
-
   Future<void> _checkAgreement() async {
-
     final prefs = await SharedPreferences.getInstance();
-
     final accepted = prefs.getBool("userAgreementAccepted") ?? false;
 
     setState(() {
       _accepted = accepted;
       _loading = false;
     });
-
   }
-
 
   @override
   Widget build(BuildContext context) {
-
     if (_loading) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -228,7 +149,7 @@ misuse of the App by the User or third parties.
 
 This App is provided on an “as is” and “as available” basis without warranties of any kind, including but not limited to accuracy, completeness, reliability, or fitness for a particular purpose.
 
-✅ 7. Accessibility Permission Disclosure -For Premium customers only 
+✅ 7. Accessibility Permission Disclosure 
 
 To provide scam protection, this App may request Accessibility Service permission.
 
@@ -352,6 +273,7 @@ By continuing to use this App, you confirm that you have read, understood, and a
     );
   }
 }
+
 /// ======================= DASHBOARD =======================
 class ScamProtectionDashboard extends StatefulWidget {
   const ScamProtectionDashboard({super.key});
@@ -361,9 +283,7 @@ class ScamProtectionDashboard extends StatefulWidget {
       _ScamProtectionDashboardState();
 }
 
-class _ScamProtectionDashboardState extends State<ScamProtectionDashboard>
-    with WidgetsBindingObserver {
-
+class _ScamProtectionDashboardState extends State<ScamProtectionDashboard> {
   // ✅ Method Channel (MATCHES KOTLIN)
   static const platform = MethodChannel('com.scamkavatch/overlay');
 
@@ -395,19 +315,12 @@ class _ScamProtectionDashboardState extends State<ScamProtectionDashboard>
   void initState() {
     super.initState();
 
-    // ✅ ADD lifecycle observer
-    WidgetsBinding.instance.addObserver(this);
-
     // Listen for suspicious url from native
     platform.setMethodCallHandler((call) async {
-
       if (call.method == "onSuspiciousUrl" && _realTimeScanning) {
-
         final String detectedUrl = call.arguments.toString();
-
         _handleAutoDetection(detectedUrl);
       }
-
       return null;
     });
   }
@@ -612,7 +525,7 @@ activity. Click here to verify: http://bank-verify-site.xyz/login
     );
   }
 
-  void _showSecurityGuide() {
+  void _showAdvisory() {
     final tips = _scamDetector.getSecurityTips();
 
     _showDialog(
@@ -622,35 +535,6 @@ activity. Click here to verify: http://bank-verify-site.xyz/login
       Colors.red,
     );
   }
-void _showProtectionSetup() {
-
-  _showDialog(
-
-    '🛠️ Protection Setup',
-
-    'Accessibility Permission Disclosure\n\n'
-
-    'Scam Kavatch Pro uses Accessibility Service to detect scam links and provide real-time protection.\n'
-    'This permission is used only for scam detection.\n'
-    'No personal data,passowrd or anyother sentive info is collected or shared.\n\n'
-
-    'Complete the following steps:\n\n'
-
-    '1️⃣ Enable Accessibility\n'
-    'Settings → Accessibility → ScamKavatchPro → ON\n\n'
-
-    '2️⃣ Allow Notifications\n'
-    'Settings → Notifications → ScamKavatchPro → Allow\n\n'
-
-    '3️⃣ Allow Display Over Apps\n'
-    'Settings → Special App Access → Display Over Apps → Allow\n\n'
-
-    'Protection activates after setup.',
-
-    Icons.settings,
-    Colors.green,
-  );
-}
 
   void _showDetectionDialog(Map<String, dynamic> result) {
     final isSuspicious = result['isSuspicious'] == true;
@@ -792,45 +676,33 @@ void _showProtectionSetup() {
             onPressed: _runFullScan,
             tooltip: 'Run Full Scan',
           ),
-         IconButton(
-  		icon: const Icon(Icons.settings),
-  	        onPressed: _showProtectionSetup,
-                tooltip: 'Protection Settings',
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: _showAdvisory,
+            tooltip: 'Security Advisory',
           ),
-
         ],
       ),
       body: SingleChildScrollView(
-  padding: const EdgeInsets.all(16),
-  child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-
-      // ⭐ PREMIUM TOGGLE (ADDED HERE)
-      const PremiumToggle(),
-      const SizedBox(height: 12),
-
-      _buildSecurityStatusCard(),
-      const SizedBox(height: 20),
-
-      _buildUrlScanner(),
-      const SizedBox(height: 20),
-
-      _buildProtectionFeatures(),
-      const SizedBox(height: 20),
-
-      _buildClipboardAnalyzer(),
-      const SizedBox(height: 20),
-
-      _buildRecentDetections(),
-      const SizedBox(height: 20),
-
-      _buildQuickActions(),
-      const SizedBox(height: 40),
-    ],
-  ),
-),
-
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSecurityStatusCard(),
+            const SizedBox(height: 20),
+            _buildUrlScanner(),
+            const SizedBox(height: 20),
+            _buildProtectionFeatures(),
+            const SizedBox(height: 20),
+            _buildClipboardAnalyzer(),
+            const SizedBox(height: 20),
+            _buildRecentDetections(),
+            const SizedBox(height: 20),
+            _buildQuickActions(),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _runFullScan,
         backgroundColor: Colors.red,
@@ -1263,19 +1135,19 @@ void _showProtectionSetup() {
               labelStyle: const TextStyle(color: Colors.white),
               onPressed: testNotification,
             ),
-         ActionChip( avatar: const Icon(Icons.security, color: Colors.white),
-          label: const Text('Security Guide'), backgroundColor: Colors.green, 
-          labelStyle: const TextStyle(color: Colors.white), 
-          onPressed: _showSecurityGuide, 
-      ), 
-    ], 
-   ), 
-  ], 
- ); 
- } 
+            ActionChip(
+              avatar: const Icon(Icons.help, color: Colors.white),
+              label: const Text('Get Help'),
+              backgroundColor: Colors.blue,
+              labelStyle: const TextStyle(color: Colors.white),
+              onPressed: _showAdvisory,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
-
-
 
 /// ======================= SCAM DETECTOR LOGIC =======================
 class _ScamDetector {
@@ -1311,26 +1183,23 @@ class _ScamDetector {
       }
     }
 
-  // Normalize URL to lowercase for consistent detection
-final lowerUrl = url.toLowerCase();
+    if  (url.contains('bank') ||
+        url.contains('login') ||
+        url.contains('login') ||
+        url.contains('offer') ||
+        url.contains('claim') ||
+        url.contains('upi') ||
+        url.contains('kyc') ||
+        url.contains('verify') ||
+        url.contains('secure')) {
+      if (!url.startsWith('https://')) {
+        isSuspicious = true;
+        patternsFound.add('Unsecured Phishing Pattern');
+        threatType = 'Phishing';
+        severity = 'High';
+      }
+    }
 
-if (lowerUrl.contains('refund') ||
-    lowerUrl.contains('claim') ||
-    lowerUrl.contains('upi') ||
-    lowerUrl.contains('kyc') ||
-    lowerUrl.contains('verify') ||
-    lowerUrl.contains('bank') ||
-    lowerUrl.contains('secure') ||
-    lowerUrl.contains('login') ||
-    lowerUrl.contains('offer')) {
-
-  if (!lowerUrl.startsWith('https://')) {
-    isSuspicious = true;
-    patternsFound.add('Unsecured Phishing Pattern');
-    threatType = 'Phishing';
-    severity = 'High';
-  }
-}
     return {
       'url': url,
       'isSuspicious': isSuspicious,

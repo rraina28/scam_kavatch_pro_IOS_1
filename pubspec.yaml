@@ -4,7 +4,7 @@ description: "Scam Kavatch Pro - AI-powered scam protection app that detects mal
 
 publish_to: 'none'
 
-# Production release version (versionName 1.0.52, versionCode 59)
+# Production version
 version: 1.0.56+63
 
 environment:
@@ -16,22 +16,19 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # Local storage for premium state and settings
+  # Local storage (settings, flags, etc.)
   shared_preferences: ^2.2.3
 
-  # Google Play Billing (production ready)
-  in_app_purchase: ^3.2.3
-
-  # Open accessibility and notification settings
+  # Open system settings (Accessibility, Notification, etc.)
   app_settings: ^5.1.1
 
   # State management
   provider: ^6.1.2
 
-  # AdMob (production ready)
+  # ✅ AdMob monetization (Android + iOS)
   google_mobile_ads: ^5.1.0
 
-  # ✅ REQUIRED for opening cybercrime site, Play Store, etc
+  # Open URLs (cybercrime reporting, Play Store, etc.)
   url_launcher: ^6.3.0
 
 
@@ -41,7 +38,7 @@ dev_dependencies:
 
   flutter_lints: ^2.0.0
 
-  # App icon generator
+  # App icon generator (Android + iOS)
   flutter_launcher_icons: ^0.13.1
 
 
@@ -49,11 +46,9 @@ dev_dependencies:
 flutter_launcher_icons:
   android: true
   ios: true
-
-  image_path: "assets/icon.png"
-
+  image_path: assets/icon.png
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: "assets/icon.png"
+  adaptive_icon_foreground: assets/icon.png
 
 
 flutter:
