@@ -8,10 +8,16 @@ workflows:
       xcode: latest
 
     scripts:
-      - name: Generate certificate
+      - name: Generate signing certificate
         script: |
-          echo "Certificate generation step"
+          mkdir -p $HOME/certs
+          security create-keychain -p "" build.keychain
+          security default-keychain -s build.keychain
+          security unlock-keychain -p "" build.keychain
+          security set-keychain-settings build.keychain
+
+          security find-identity -v
 
     artifacts:
-      - $HOME/Library/MobileDevice/Certificates/*.p12
-      - $HOME/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision
+      - $HOME/certs/*.p12
+      - $HOME/certs/*.mobileprovision
