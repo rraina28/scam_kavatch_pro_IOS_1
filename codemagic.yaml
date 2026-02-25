@@ -3,12 +3,12 @@ workflows:
     name: iOS Signed Build
     max_build_duration: 60
 
-    integrations:
-      app_store_connect: CodemagicKey
-
     environment:
       flutter: stable
       xcode: latest
+
+      groups:
+        - APP_STORE_CONNECT
 
       ios_signing:
         distribution_type: app_store
