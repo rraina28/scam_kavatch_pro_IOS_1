@@ -23,6 +23,13 @@ workflows:
 
     publishing:
       app_store_connect:
-        auth: integration
-        integration: CodemagicKey
+        key_identifier: 47RHWGCG33
+        issuer_id: 8dd23599-5631-449f-aeef-f4996e10d751
+        private_key: |
+          -----BEGIN PRIVATE KEY-----
+          MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg2BrDbjz15yG2fHBc
+          8jXjLwUvBEDKo/Ynzu78dGvXfaWgCgYIKoZIzj0DAQehRANCAATcQjgj3/rEx/Ju
+          zERCZKoHn0/a++GP66p4XTwhwvmCaXi2EVB0XA33MSWv3pDHoedUvJg5lAuMGFsC
+          LGDXHYn7
+          -----END PRIVATE KEY-----
         submit_to_testflight: true
