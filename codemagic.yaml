@@ -7,9 +7,6 @@ workflows:
       flutter: stable
       xcode: latest
 
-      groups:
-        - APP_STORE_CONNECT
-
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.cybrains.scamkavatchpro
@@ -26,4 +23,5 @@ workflows:
 
     publishing:
       app_store_connect:
+        integration: CodemagicKey
         submit_to_testflight: true
