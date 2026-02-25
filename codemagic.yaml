@@ -25,7 +25,7 @@ workflows:
       app_store_connect:
         key_identifier: 47RHWGCG33
         issuer_id: 8dd23599-5631-449f-aeef-f4996e10d751
-        private_key: |
+        api_key: |
           -----BEGIN PRIVATE KEY-----
           MIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQg2BrDbjz15yG2fHBc
           8jXjLwUvBEDKo/Ynzu78dGvXfaWgCgYIKoZIzj0DAQehRANCAATcQjgj3/rEx/Ju
