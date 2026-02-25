@@ -15,10 +15,11 @@ workflows:
       - name: Install dependencies
         script: flutter pub get
 
-      - name: Build IPA with signing
-        script: |
-          xcode-project use-profiles
-          flutter build ipa --release
+      - name: Configure signing
+        script: xcode-project use-profiles
+
+      - name: Build IPA
+        script: flutter build ipa --release --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
       - build/ios/ipa/*.ipa
