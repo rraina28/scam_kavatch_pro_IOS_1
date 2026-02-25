@@ -3,20 +3,24 @@ workflows:
     name: iOS Signed Build
     max_build_duration: 60
 
+    integrations:
+      app_store_connect:
+        - CodemagicKey
+
     environment:
       flutter: stable
       xcode: latest
-
-      groups:
-        - APP_STORE_CONNECT
 
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.cybrains.scamkavatchpro
 
     scripts:
-      - flutter pub get
-      - flutter build ipa --release
+      - name: Install dependencies
+        script: flutter pub get
+
+      - name: Build IPA
+        script: flutter build ipa --release
 
     artifacts:
       - build/ios/ipa/*.ipa
