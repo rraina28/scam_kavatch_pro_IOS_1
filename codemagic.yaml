@@ -3,6 +3,9 @@ workflows:
     name: iOS Signed Build
     max_build_duration: 60
 
+    integrations:
+      app_store_connect: CodemagicKey
+
     environment:
       flutter: stable
       xcode: latest
@@ -23,5 +26,4 @@ workflows:
 
     publishing:
       app_store_connect:
-        integration: CodemagicKey
         submit_to_testflight: true
