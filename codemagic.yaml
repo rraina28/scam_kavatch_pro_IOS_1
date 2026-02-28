@@ -2,9 +2,6 @@ workflows:
   ios-release:
     name: iOS Release Build
 
-    integrations:
-      app_store_connect: true
-
     environment:
       flutter: stable
       xcode: latest
