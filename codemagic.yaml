@@ -1,20 +1,33 @@
-C:\flutter_projects\scam_kavatch_pro_IOS_1>git commit -m "Add iOS auto upload workflow"
-On branch main
-Your branch is up to date with 'origin/main'.
+workflows:
+  ios-release:
+    name: iOS Release Build
 
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-        modified:   pubspec.yaml
+    environment:
+      flutter: stable
+      xcode: latest
 
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-        main
-        pip
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.cybrains.scamkavatchpro
 
-no changes added to commit (use "git add" and/or "git commit -a")
+    scripts:
+      - name: Flutter clean
+        script: flutter clean
 
-C:\flutter_projects\scam_kavatch_pro_IOS_1>git push
-Everything up-to-date
+      - name: Get Flutter packages
+        script: flutter pub get
 
-C:\flutter_projects\scam_kavatch_pro_IOS_1>
+      - name: Build iOS IPA
+        script: |
+          flutter build ipa \
+            --release \
+            --build-name=1.0.56 \
+            --build-number=63
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
