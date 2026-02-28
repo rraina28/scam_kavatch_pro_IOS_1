@@ -29,6 +29,6 @@ workflows:
 
     publishing:
       app_store_connect:
-        username: "r_raina27@yahoo.co.in"
-        app_specific_password: $APP_SPECIFIC_PASSWORD
+        apple_id: "r_raina27@yahoo.co.in"
+        password: $APP_SPECIFIC_PASSWORD
         submit_to_testflight: true
